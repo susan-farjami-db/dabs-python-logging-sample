@@ -1,0 +1,94 @@
+bundle:
+  name: dabs-python-logging-sample
+
+variables:
+  log_level:
+    description: Python log level for the job (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    default: INFO
+
+  notification_email:
+    description: Email to notify on failure
+    default: ""
+
+artifacts:
+  default:
+    type: whl
+    build: python -m build --wheel
+    path: .
+
+targets:
+  dev:
+    mode: development
+    default: true
+    variables:
+      log_level: DEBUG
+    workspace:
+      host: https://<your-workspace>.cloud.databricks.com
+
+  prod:
+    mode: production
+    variables:
+      log_level: WARNING
+    workspace:
+      host: https://<your-workspace>.cloud.databricks.com
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
+
+resources:
+  jobs:
+    # ------------------------------------------------------------------
+    # Pattern 1: Python wheel task
+    # ------------------------------------------------------------------
+    # Log level is set per-target via the bundle variable, and can be
+    # overridden at run-time from the Jobs UI ("Run now with different
+    # parameters") without redeploying the bundle.
+    # ------------------------------------------------------------------
+    wheel_job:
+      name: "[${bundle.target}] dab-logging-sample (wheel)"
+      tasks:
+        - task_key: main
+          job_cluster_key: default
+          python_wheel_task:
+            package_name: dab_logging_sample
+            entry_point: main
+            parameters:
+              - "--log-level"
+              - "${var.log_level}"
+              - "--run-name"
+              - "${bundle.target}-wheel"
+          libraries:
+            - whl: ../dist/*.whl
+      job_clusters:
+        - job_cluster_key: default
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            node_type_id: i3.xlarge
+            num_workers: 0
+            data_security_mode: SINGLE_USER
+            spark_conf:
+              spark.master: "local[*]"
+
+    # ------------------------------------------------------------------
+    # Pattern 2: Notebook task
+    # ------------------------------------------------------------------
+    # Same idea, but log level is exposed as a notebook widget so it can
+    # be overridden in the Jobs UI or in the notebook itself.
+    # ------------------------------------------------------------------
+    notebook_job:
+      name: "[${bundle.target}] dab-logging-sample (notebook)"
+      tasks:
+        - task_key: main
+          job_cluster_key: default
+          notebook_task:
+            notebook_path: ./notebooks/example_notebook.py
+            base_parameters:
+              log_level: "${var.log_level}"
+              run_name: "${bundle.target}-notebook"
+      job_clusters:
+        - job_cluster_key: default
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            node_type_id: i3.xlarge
+            num_workers: 0
+            data_security_mode: SINGLE_USER
+            spark_conf:
+              spark.master: "local[*]"

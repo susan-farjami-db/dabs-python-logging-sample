@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dab-logging-sample"
+version = "0.1.0"
+description = "Sample DAB demonstrating runtime-configurable Python logging"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+# Maps to entry_point: main in databricks.yml -> python_wheel_task
+main = "dab_logging_sample.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
