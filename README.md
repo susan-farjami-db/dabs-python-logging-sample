@@ -64,10 +64,23 @@ suppression, same handler reset behavior across kernel reuses.
 
 ## Deploy & run
 
+Install the Databricks CLI (skip if you already have it):
+
 ```bash
-# Install Databricks CLI (skip if you already have it)
+# macOS
 brew tap databricks/tap && brew install databricks
 
+# Linux / macOS (no Homebrew)
+curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+# Windows (PowerShell, winget)
+winget install Databricks.DatabricksCLI
+```
+
+For other Windows installers (Chocolatey, manual zip) see the
+[official install docs](https://docs.databricks.com/aws/en/dev-tools/cli/install.html).
+
+```bash
 # Configure auth (one-time)
 databricks configure
 
