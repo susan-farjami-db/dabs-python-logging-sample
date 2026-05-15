@@ -1,8 +1,7 @@
 # DAB Python Logging Sample
 
 A minimal [Databricks Asset Bundle](https://docs.databricks.com/aws/en/dev-tools/bundles/index.html)
-demonstrating a clean, runtime-configurable pattern for Python logging in
-production jobs.
+demonstrating a clean, runtime-configurable pattern for Python logging in production jobs.
 
 The goal is to make the log level a knob you can turn **without redeploying**:
 default per environment, override per run from the Jobs UI, no code changes.
