@@ -64,7 +64,20 @@ suppression, same handler reset behavior across kernel reuses.
 
 ## Deploy & run
 
-Install the Databricks CLI (skip if you already have it):
+### Prereqs
+
+```bash
+# Python build backend (DAB invokes `python -m build --wheel` to package the wheel)
+pip install build
+```
+
+Edit `databricks.yml` and replace `<your-workspace>` in the `targets.dev.workspace.host`
+(and `targets.prod` if you use it) with your actual workspace URL,
+e.g. `https://adb-1234567890.azuredatabricks.net` or `https://your-workspace.cloud.databricks.com`.
+
+### Install the Databricks CLI
+
+Skip if you already have it:
 
 ```bash
 # macOS
@@ -81,8 +94,8 @@ For other Windows installers (Chocolatey, manual zip) see the
 [official install docs](https://docs.databricks.com/aws/en/dev-tools/cli/install.html).
 
 ```bash
-# Configure auth (one-time)
-databricks configure
+# Configure auth (one-time, OAuth)
+databricks auth login --host https://<your-workspace>.cloud.databricks.com
 
 # Build the wheel + upload bundle artifacts
 databricks bundle deploy --target dev
@@ -93,8 +106,12 @@ databricks bundle run wheel_job --target dev
 # Run the notebook job
 databricks bundle run notebook_job --target dev
 
-# Override log level for a one-off run
-databricks bundle run wheel_job --target dev --params "log-level=DEBUG"
+# Override log level for a one-off run (without redeploying).
+# For the wheel job, pass named params straight to the task:
+databricks bundle run wheel_job --target dev --python-named-params log-level=DEBUG,run-name=adhoc
+
+# For the notebook job, override the widget value:
+databricks bundle run notebook_job --target dev --params log_level=DEBUG
 ```
 
 ## Local test (no Databricks needed)

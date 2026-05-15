@@ -6,10 +6,6 @@ variables:
     description: Python log level for the job (DEBUG, INFO, WARNING, ERROR, CRITICAL)
     default: INFO
 
-  notification_email:
-    description: Email to notify on failure
-    default: ""
-
 artifacts:
   default:
     type: whl
@@ -56,16 +52,22 @@ resources:
               - "--run-name"
               - "${bundle.target}-wheel"
           libraries:
-            - whl: ../dist/*.whl
+            - whl: ./dist/*.whl
       job_clusters:
         - job_cluster_key: default
           new_cluster:
             spark_version: 15.4.x-scala2.12
+            # AWS node type. For Azure use e.g. Standard_DS3_v2; for GCP, n2-highmem-4.
             node_type_id: i3.xlarge
             num_workers: 0
             data_security_mode: SINGLE_USER
+            single_user_name: ${workspace.current_user.userName}
+            # Standard Databricks "Single Node" recipe (no workers, runs driver-only).
             spark_conf:
-              spark.master: "local[*]"
+              spark.databricks.cluster.profile: singleNode
+              spark.master: "local[*, 4]"
+            custom_tags:
+              ResourceClass: SingleNode
 
     # ------------------------------------------------------------------
     # Pattern 2: Notebook task
@@ -83,12 +85,22 @@ resources:
             base_parameters:
               log_level: "${var.log_level}"
               run_name: "${bundle.target}-notebook"
+          # The notebook imports configure_logging() from the wheel, so the
+          # wheel must be installed on this cluster too.
+          libraries:
+            - whl: ./dist/*.whl
       job_clusters:
         - job_cluster_key: default
           new_cluster:
             spark_version: 15.4.x-scala2.12
+            # AWS node type. For Azure use e.g. Standard_DS3_v2; for GCP, n2-highmem-4.
             node_type_id: i3.xlarge
             num_workers: 0
             data_security_mode: SINGLE_USER
+            single_user_name: ${workspace.current_user.userName}
+            # Standard Databricks "Single Node" recipe (no workers, runs driver-only).
             spark_conf:
-              spark.master: "local[*]"
+              spark.databricks.cluster.profile: singleNode
+              spark.master: "local[*, 4]"
+            custom_tags:
+              ResourceClass: SingleNode
